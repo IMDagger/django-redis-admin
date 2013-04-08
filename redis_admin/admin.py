@@ -67,12 +67,21 @@ class RedisAdmin(admin.ModelAdmin):
                                   'count': paginator.count, 'page_range': paginator.page_range},
                                    context_instance=RequestContext(request))
 
+    @property
+    def cache_client(self):
+        if hasattr('raw_client', cache):
+            # django-redis package
+            return cache.raw_client
+        else:
+            # django-redis-cache package
+            return cache._client
+
     @method_decorator(user_passes_test(lambda u: u.is_superuser))
     def key(self, request, key):
 
         try:
             # not all redis cache supprots this method
-            key_type = cache._client.type(key)
+            key_type = self.cache_client.type(key)
         except:
             key_type = None
 
@@ -82,11 +91,11 @@ class RedisAdmin(admin.ModelAdmin):
         context = {'key': key, 'type': key_type}
 
 #        if key_type == 'string':
-#             context['value'] = cache._client.get(key)
+#             context['value'] = self.cache_client.get(key)
         if key_type == 'set':
-            context['value'] = str(cache._client.smembers(key))
+            context['value'] = str(self.cache_client.smembers(key))
         else:
-            context['value'] = cache._client.get(key)
+            context['value'] = self.cache_client.get(key)
 
         return render_to_response('redis_admin/key.html', context,
                                    context_instance=RequestContext(request))
