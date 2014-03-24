@@ -1,6 +1,9 @@
 from django.contrib import admin
 from django.db import models
-from django.conf.urls.defaults import patterns
+try:
+    from django.conf.urls import patterns
+except ImportError:
+    from django.conf.urls.defaults import patterns
 from django.core.cache import cache
 from django.template import RequestContext
 from django.shortcuts import render_to_response
